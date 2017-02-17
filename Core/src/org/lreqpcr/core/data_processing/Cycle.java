@@ -22,7 +22,7 @@ package org.lreqpcr.core.data_processing;
  * allows analysis and display of the Profile. This in turn allows data retrieval
  * by transversing the Cycle linked-list.
  */
-public class Cycle {
+public class Cycle implements Cloneable {
 
     /**
      * The cycle number
@@ -65,6 +65,10 @@ public class Cycle {
         if (this.cycleNumber != 0 && cycleNumber != 1) {
             cycleEfficiency = (currentCycleFluorescence / this.previousCycle.currentCycleFluorescence) - 1;
         }
+    }
+
+    private Cycle(int cycleNumber) {
+        this.cycleNumber = cycleNumber;
     }
 
     public double getCycleEfficiency() {
@@ -174,5 +178,29 @@ public class Cycle {
      */
     public void setCycLREparam(double[] cycLREparam) {
         this.cycLREparam = cycLREparam;
+    }
+
+    private void setPredictedCycleFluorescence(double predictedCycleFluorescence) {
+        this.predictedCycleFluorescence = predictedCycleFluorescence;
+    }
+
+    private void setOFfracFoAv(double oFfracFoAv) {
+        this.oFfracFoAv = oFfracFoAv;
+    }
+
+    /**
+     * Note that this will not clone the previousCycle and nextCycle fields.
+     */
+    @SuppressWarnings("MethodDoesntCallSuperMethod")
+    @Override
+    public Cycle clone() {
+        Cycle clone = new Cycle(cycleNumber);
+        clone.setCurrentCycleFluorescence(currentCycleFluorescence);
+        clone.setCycleEfficiency(cycleEfficiency);
+        clone.setFo(fo);
+        clone.setPredictedCycleFluorescence(predictedCycleFluorescence);
+        clone.setOFfracFoAv(oFfracFoAv);
+        clone.setCycLREparam(cycLREparam);
+        return clone;
     }
 }

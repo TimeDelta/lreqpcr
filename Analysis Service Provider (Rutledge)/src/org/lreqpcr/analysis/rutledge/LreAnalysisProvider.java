@@ -51,9 +51,9 @@ public class LreAnalysisProvider implements LreAnalysisService {
         //Selecting a start cycle also removes any previously determined LRE parameters
         if (parameters.getMinFc() == 0) {
             //No user selected minimum Fc, so need to scan the profile for a  LRE window
-            LreWindowSelector.selectLreStartCycleViaScanning(prfSum);
+            LreWindowSelector.selectLreStartCycleViaScanning(prfSum, parameters.getFoThreshold());
         } else {//A user-selected minFc has be set, so use it
-            LreWindowSelector.selectLreStartCycleUsingMinFc(prfSum, parameters.getMinFc());
+            LreWindowSelector.selectLreStartCycleUsingMinFc(prfSum, parameters.getMinFc(), parameters.getFoThreshold());
         }
         if (!profile.hasAnLreWindowBeenFound()) {
 //Failed to find a window, thus return as updating the LRE parameters is irrelevant

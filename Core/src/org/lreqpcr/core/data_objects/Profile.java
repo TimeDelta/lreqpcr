@@ -24,7 +24,7 @@ import java.util.Date;
  * units. Note that this is designed to primarily be a data storage object
  * containing only setter and getter methods.
  */
-public class Profile extends LreObject {
+public class Profile extends LreObject implements Cloneable {
 
     //Profile creation parameters
     /**
@@ -601,5 +601,48 @@ public class Profile extends LreObject {
     @Override
     public String toString() {
         return super.getName();
+    }
+
+    @SuppressWarnings("MethodDoesntCallSuperMethod")
+    @Override
+    public Profile clone() {
+        Profile clone = new Profile();
+        clone.run = run.clone();
+        clone.runDate = runDate;
+        clone.wellLabel = wellLabel;
+        clone.wellNumber = wellNumber;
+        clone.rawFcReadings = rawFcReadings;
+        clone.sampleName = sampleName;
+        clone.ampliconName = ampliconName;
+        clone.ampliconSize = ampliconSize;
+        clone.targetStrandedness = targetStrandedness;
+        clone.ampliconTm = ampliconTm;
+        clone.cycleThreshold = cycleThreshold;
+        clone.fluorescenceThreshold = fluorescenceThreshold;
+        clone.fcReadings = fcReadings;
+        clone.fb = fb;
+        clone.hasAnLreWindowBeenFound = hasAnLreWindowBeenFound;
+        clone.didNonlinearRegressionSucceed = didNonlinearRegressionSucceed;
+        clone.startingCycleIndex = startingCycleIndex;
+        clone.lreWinSize = lreWinSize;
+        clone.maxEfficiency = maxEfficiency;
+        clone.changeInEfficiency = changeInEfficiency;
+        clone.r2 = r2;
+        clone.avFo = avFo;
+        clone.avFoCV = avFoCV;
+        clone.midC = midC;
+        clone.excluded = excluded;
+        clone.whyExcluded = whyExcluded;
+        clone.nrFb = nrFb;
+        clone.nrFbSlope = nrFbSlope;
+        clone.nonlinearMaxEfficiency = nonlinearMaxEfficiency;
+        clone.nonlinearMaxFluorescence = nonlinearMaxFluorescence;
+        clone.nrFo = nrFo;
+        clone.nrFbSD = nrFbSD;
+        clone.nrFbSlopeSD = nrFbSlopeSD;
+        clone.nonlinearMaxEfficiencyStandardDeviation = nonlinearMaxEfficiencyStandardDeviation;
+        clone.nonlinearMaxFluorescenceStandardDeviation = nonlinearMaxFluorescenceStandardDeviation;
+        clone.nrFoSD = nrFoSD;
+        return clone;
     }
 }

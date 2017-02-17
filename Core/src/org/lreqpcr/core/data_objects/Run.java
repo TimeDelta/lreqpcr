@@ -28,18 +28,16 @@ import org.lreqpcr.core.utilities.MathFunctions;
 /**
  * Data object representing a Run loosely based on the RDML 1.0 specification.
  */
-public class Run extends LreObject {
+public class Run extends LreObject implements Cloneable {
 
-    private Date runDate;
-    private List<String> operators;//The person(s) conducting the Run
-    protected List<AverageProfile> averageProfileList;
-    private int year;
-    private int month;
-    private double runSpecificOCF = 0;//Run-specific OCF that only applies to Runs containing SampleProfiles
     protected double averageFmax = 0;//Average Fmax of all replicate profiles
     protected double avFmaxCV = 0;//Average Fmax coefficient of variation
-    protected double averageEmax = 0;
-    protected double avEmaxCV = 0;
+
+    private Date runDate;
+    private List<AverageProfile> averageProfileList;
+    private double runSpecificOCF = 0;//Run-specific OCF that only applies to Runs containing SampleProfiles
+    private double averageEmax = 0;
+    private double avEmaxCV = 0;
     private String versionNumber;
 
     /**
@@ -51,22 +49,6 @@ public class Run extends LreObject {
     public Run() {
         setChildClass(AverageProfile.class);
         versionNumber = "0.8.6";
-    }
-
-    /**
-     * Returns a list of persons that conducted the Run.
-     * @return the persons conducting the Run
-     */
-    public List<String> getOperators() {
-        return operators;
-    }
-
-    /**
-     * Add a person to those conducting the Run
-     * @param operator the person conducting the Run
-     */
-    public void addOperator(String operator) {
-        this.operators.add(operator);
     }
 
     /**
@@ -109,30 +91,8 @@ public class Run extends LreObject {
         this.runDate = runDate;
         Calendar calendar = new GregorianCalendar();
         calendar.setTime(runDate);
-        year = calendar.get(Calendar.YEAR);
-        month = calendar.get(Calendar.MONTH);
     }
 
-    /**
-     *
-     * @return the month of the run
-     */
-    public int getMonth() {
-        return month;
-    }
-
-    /**
-     *
-     * @return the year of the run
-     */
-    public int getYear() {
-        return year;
-    }
-
-    /**
-     *
-     * @return
-     */
     public double getAverageFmax() {
         if(averageFmax == 0){
             calculateAverageFmax();
@@ -140,8 +100,16 @@ public class Run extends LreObject {
         return averageFmax;
     }
 
+    private void setAverageFmax(double averageFmax) {
+        this.averageFmax = averageFmax;
+    }
+
     public double getAvFmaxCV() {
         return avFmaxCV;
+    }
+
+    private void setAvFmaxCV(double avFmaxCV) {
+        this.avFmaxCV = avFmaxCV;
     }
 
     public double getAverageEmax() {
@@ -151,8 +119,16 @@ public class Run extends LreObject {
         return averageEmax;
     }
 
+    private void setAverageEmax(double averageEmax) {
+        this.averageEmax = averageEmax;
+    }
+
     public double getAvEmaxCV() {
         return avEmaxCV;
+    }
+
+    private void setAvEmaxCV(double avEmaxCV) {
+        this.avEmaxCV = avEmaxCV;
     }
 
     /**
@@ -269,5 +245,20 @@ public class Run extends LreObject {
         }else{
             return run.getRunDate().compareTo(getRunDate());
         }
+    }
+
+    @SuppressWarnings("MethodDoesntCallSuperMethod")
+    @Override
+    public Run clone() {
+        Run clone = new Run();
+        clone.setRunDate(runDate);
+        clone.setAverageProfileList(averageProfileList);
+        clone.setRunSpecificOCF(runSpecificOCF);
+        clone.setAverageFmax(averageFmax);
+        clone.setAvFmaxCV(avFmaxCV);
+        clone.setAverageEmax(averageEmax);
+        clone.setAvEmaxCV(avEmaxCV);
+        clone.setVersionNumber(versionNumber);
+        return clone;
     }
 }

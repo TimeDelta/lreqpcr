@@ -51,6 +51,15 @@ public class ProfileSummary {
         initiateProfileSummary();
     }
 
+    /**
+     * This should ONLY ever be used by the {@link #clone()} function.
+     */
+    private ProfileSummary(Profile profile, Cycle zeroCycle) {
+        this.profile = profile;
+        this.zeroCycle = zeroCycle;
+        this.db = null;
+    }
+
     private void initiateProfileSummary() {
         update();
     }
@@ -93,7 +102,9 @@ public class ProfileSummary {
                 profile.getChangeInEfficiency(),
                 profile.getMaxEfficiency(),
                 profile.getAvFo()));
-            db.saveObject(profile);
+            if (db != null) {
+                db.saveObject(profile);
+            }
         }
     }
 
@@ -301,5 +312,11 @@ public class ProfileSummary {
             runner = runner.getNextCycle();
         }
         return runner;
+    }
+
+    public ProfileSummary cloneSummary() {
+        ProfileSummary clone = new ProfileSummary(profile.clone(), zeroCycle.clone());
+        clone.update();
+        return clone;
     }
 }
