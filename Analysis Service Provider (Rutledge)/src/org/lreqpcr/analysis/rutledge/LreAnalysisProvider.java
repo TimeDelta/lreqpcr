@@ -30,46 +30,71 @@ import org.openide.util.lookup.ServiceProvider;
 @ServiceProvider(service = LreAnalysisService.class)
 public class LreAnalysisProvider implements LreAnalysisService {
 
+    private static final int MAX_CYCLES_FROM_GUESS_TO_SEARCH = 5;
+
     private Profile profile;
-    private ProfileSummary prfSum;
+    private ProfileSummary profileSummary;
     private LreWindowSelectionParameters parameters;
-    private NonlinearRegressionImplementation nrAnalysis = new NonlinearRegressionImplementation();
+    private final NonlinearRegressionImplementation nrAnalysis = new NonlinearRegressionImplementation();
 
     public LreAnalysisProvider() {
     }
 
+    @Override
     public boolean lreWindowInitialization(ProfileSummary prfSum, LreWindowSelectionParameters parameters) {
-        this.prfSum = prfSum;
+        this.profileSummary = prfSum;
         this.parameters = parameters;
         this.profile = prfSum.getProfile();
-        //Reset the Profile to remove any previous LRE or NR analysis derived values
-        profile.setLreVariablesToZero();
-        //Be sure that the working Fc dataset is derived using an average Fb; 
-        //that is, to reverse any NR modification of the Fc dataset
-        LreWindowSelector.substractBackgroundUsingAvFc(profile);
-        prfSum.update();
-        //Selecting a start cycle also removes any previously determined LRE parameters
-        if (parameters.getMinFc() == 0) {
-            //No user selected minimum Fc, so need to scan the profile for a  LRE window
-            LreWindowSelector.selectLreStartCycleViaScanning(prfSum);
-        } else {//A user-selected minFc has be set, so use it
-            LreWindowSelector.selectLreStartCycleUsingMinFc(prfSum, parameters.getMinFc());
-        }
-        if (!profile.hasAnLreWindowBeenFound()) {
-//Failed to find a window, thus return as updating the LRE parameters is irrelevant
-            prfSum.update();
+
+        // this avoids having to search all possible windows
+        if (!makeInitialGuessAtLreWindow()) {
             return false;
         }
-        //Attempt to expand the upper limit of the LRE window
-        LreWindowSelector.expandLreWindowWithoutNR(prfSum, parameters.getFoThreshold());
-        prfSum.update();
-        if (!profile.hasAnLreWindowBeenFound()) {
-            return false;
-        }else {
+
+        // look at all possible windows near the initial
+        // guess and evaluate each one to find the best
+        LREWindowEvaluator evaluator = new LREWindowEvaluator();
+        final int initialStartCycleIndex = profile.getStartingCycleIndex();
+        final int initialWindowSize = profile.getLreWinSize();
+        int bestStartCycleIndex = initialStartCycleIndex;
+        int bestWindowSize = initialWindowSize;
+        double bestFitnessScore = evaluator.evaluateLREWindow(prfSum);
+
+        for (int startCycleOffset = -MAX_CYCLES_FROM_GUESS_TO_SEARCH; startCycleOffset < MAX_CYCLES_FROM_GUESS_TO_SEARCH; ++startCycleOffset) {
+            int newStartCycleIndex = initialStartCycleIndex + startCycleOffset;
+            if (!isValidStartCycleIndex(newStartCycleIndex)) {
+                break;
+            }
+            profile.setStartingCycleIndex(newStartCycleIndex);
+
+            for (int endCycleOffset = -MAX_CYCLES_FROM_GUESS_TO_SEARCH; endCycleOffset < MAX_CYCLES_FROM_GUESS_TO_SEARCH; ++endCycleOffset) {
+                int newWindowSize = initialWindowSize - startCycleOffset + endCycleOffset;
+                if (!isValidWindowSize(newWindowSize)) {
+                    break;
+                }
+
+                profile.setLreWinSize(newWindowSize);
+                profileSummary.update();
+                double fitnessScore = evaluator.evaluateLREWindow(prfSum);
+                if (fitnessScore > bestFitnessScore) {
+                    bestFitnessScore = fitnessScore;
+                    bestStartCycleIndex = newStartCycleIndex;
+                    bestWindowSize = newWindowSize;
+                }
+            }
+        }
+
+        if (bestFitnessScore != LREWindowEvaluator.INVALID) {
+            profile.setStartingCycleIndex(bestStartCycleIndex);
+            profile.setLreWinSize(bestWindowSize);
+            profileSummary.update();
             return true;
         }
+
+        return false;
     }
 
+    @Override
     public boolean optimizeLreWindowUsingNonlinearRegression(ProfileSummary prfSum, LreWindowSelectionParameters parameters) {
         profile = prfSum.getProfile();
         this.parameters = parameters;
@@ -88,10 +113,44 @@ public class LreAnalysisProvider implements LreAnalysisService {
         prfSum.update();
         return prfSum.getProfile().didNonlinearRegressionSucceed();
     }
-    
+
+    @Override
     public boolean lreWindowUpdateUsingNR(ProfileSummary prfSum) {
         nrAnalysis.generateOptimizedFcDatasetUsingNonliearRegression(prfSum);
         prfSum.update();
         return prfSum.getProfile().didNonlinearRegressionSucceed();
+    }
+
+    private boolean makeInitialGuessAtLreWindow() {
+        //Reset the Profile to remove any previous LRE or NR analysis derived values
+        profile.setLreVariablesToZero();
+        //Be sure that the working Fc dataset is derived using an average Fb;
+        //that is, to reverse any NR modification of the Fc dataset
+        LreWindowSelector.substractBackgroundUsingAvFc(profile);
+        profileSummary.update();
+        //Selecting a start cycle also removes any previously determined LRE parameters
+        if (parameters.getMinFc() == 0) {
+            //No user selected minimum Fc, so need to scan the profile for a  LRE window
+            LreWindowSelector.selectLreStartCycleViaScanning(profileSummary);
+        } else {//A user-selected minFc has be set, so use it
+            LreWindowSelector.selectLreStartCycleUsingMinFc(profileSummary, parameters.getMinFc());
+        }
+        if (!profile.hasAnLreWindowBeenFound()) {
+            // Failed to find a window, thus return as updating the LRE parameters is irrelevant
+            profileSummary.update();
+            return false;
+        }
+        //Attempt to expand the upper limit of the LRE window
+        LreWindowSelector.expandLreWindowWithoutNR(profileSummary, parameters.getFoThreshold());
+        profileSummary.update();
+        return profile.hasAnLreWindowBeenFound();
+    }
+
+    private boolean isValidStartCycleIndex(int startCycleIndex) {
+        return startCycleIndex >= 0 && startCycleIndex < profile.getTotalNumberOfCycles() - 1;
+    }
+
+    private boolean isValidWindowSize(int windowSize) {
+        return windowSize > 0 && windowSize <= profile.getTotalNumberOfCycles() - profile.getStartingCycleIndex() - 1;
     }
 }
