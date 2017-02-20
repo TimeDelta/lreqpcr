@@ -296,6 +296,9 @@ public class Profile extends LreObject {
     }
 
     public void setLreWinSize(int lreWinSize) {
+        if (lreWinSize > getTotalNumberOfCycles() - startingCycleIndex - 1 || lreWinSize < 1) {
+            throw new RuntimeException("Invalid LRE Window size: " + lreWinSize);
+        }
         this.lreWinSize = lreWinSize;
     }
 
@@ -351,7 +354,14 @@ public class Profile extends LreObject {
     }
 
     public void setStartingCycleIndex(int startingCycleIndex) {
+        if (startingCycleIndex < 0 || startingCycleIndex > getTotalNumberOfCycles() - 1) {
+            throw new RuntimeException("Invalid Start Cycle index: " + startingCycleIndex);
+        }
         this.startingCycleIndex = startingCycleIndex;
+    }
+
+    public int getTotalNumberOfCycles() {
+        return rawFcReadings.length;
     }
 
     public String getWellLabel() {
