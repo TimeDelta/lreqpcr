@@ -8,7 +8,7 @@ public class LREWindowEvaluator {
 
     public static final double INVALID = -1;
 
-    private static final double MAX_DISTANCE_FROM_100_EFFICIENCY = 100;
+    private static final double MAX_DISTANCE_FROM_100_EFFICIENCY = 1;
 
     /**
      * @return A number between 0 and 1 representing the fitness of the current
@@ -18,25 +18,31 @@ public class LREWindowEvaluator {
      */
     public double evaluateLREWindow(ProfileSummary profileSummary) {
         Profile profile = profileSummary.getProfile();
-        if (isLreWindowInvalid(profile)) {
+        if (isLreWindowInvalid(profileSummary)) {
             return INVALID;
         }
-        double[] evaluations = new double[2];
-        evaluations[0] = evaluateMaxEfficiency(profile);
-        evaluations[1] = evaluateActualVersusPredictedFluorescence(profileSummary);
-        return getAverageEvaluation(evaluations);
+        //double[] evaluations = new double[2];
+        //evaluations[0] = evaluateMaxEfficiency(profile);
+        //evaluations[1] = evaluateActualVersusPredictedFluorescence(profileSummary);
+        //return getAverageEvaluation(evaluations);
+        return evaluateMaxEfficiency(profile);
     }
 
-    private boolean isLreWindowInvalid(Profile profile) {
-        return !profile.hasAnLreWindowBeenFound() || isMaxEfficiencyInvalid(profile);
+    private boolean isLreWindowInvalid(ProfileSummary profileSummary) {
+        Profile profile = profileSummary.getProfile();
+        return !profile.hasAnLreWindowBeenFound() || isMaxEfficiencyInvalid(profile) || isActualVersusPredictedFluorescenceInvalid(profileSummary);
     }
 
     private boolean isMaxEfficiencyInvalid(Profile profile) {
-        return Math.abs(100 - profile.getMaxEfficiency()) > MAX_DISTANCE_FROM_100_EFFICIENCY;
+        return Math.abs(1 - profile.getMaxEfficiency()) > MAX_DISTANCE_FROM_100_EFFICIENCY;
     }
 
     private double evaluateMaxEfficiency(Profile profile) {
-        return 1 - (Math.abs(profile.getMaxEfficiency() - 100)/100);
+        return 1 - Math.abs(profile.getMaxEfficiency() - 1);
+    }
+
+    private boolean isActualVersusPredictedFluorescenceInvalid(ProfileSummary profileSummary) {
+        return evaluateActualVersusPredictedFluorescence(profileSummary) > .5;
     }
 
     private double evaluateActualVersusPredictedFluorescence(ProfileSummary profileSummary) {

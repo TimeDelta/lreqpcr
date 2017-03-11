@@ -30,7 +30,7 @@ import org.openide.util.lookup.ServiceProvider;
 @ServiceProvider(service = LreAnalysisService.class)
 public class LreAnalysisProvider implements LreAnalysisService {
 
-    private static final int MAX_CYCLES_FROM_GUESS_TO_SEARCH = 5;
+    private static final int MAX_CYCLES_FROM_GUESS_TO_SEARCH = 4;
 
     private Profile profile;
     private ProfileSummary profileSummary;
