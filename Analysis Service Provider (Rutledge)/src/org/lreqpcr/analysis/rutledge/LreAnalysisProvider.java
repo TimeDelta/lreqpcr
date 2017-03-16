@@ -17,6 +17,7 @@
 package org.lreqpcr.analysis.rutledge;
 
 import org.lreqpcr.analysis_services.LreAnalysisService;
+import org.lreqpcr.core.data_objects.AverageSampleProfile;
 import org.lreqpcr.core.data_objects.LreWindowSelectionParameters;
 import org.lreqpcr.core.data_objects.Profile;
 import org.lreqpcr.core.data_processing.ProfileSummary;
@@ -30,7 +31,7 @@ import org.openide.util.lookup.ServiceProvider;
 @ServiceProvider(service = LreAnalysisService.class)
 public class LreAnalysisProvider implements LreAnalysisService {
 
-    private static final int MAX_CYCLES_FROM_GUESS_TO_SEARCH = 4;
+    private static final int MAX_CYCLES_FROM_GUESS_TO_SEARCH = 5;
 
     private Profile profile;
     private ProfileSummary profileSummary;

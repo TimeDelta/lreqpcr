@@ -9,6 +9,7 @@ public class LREWindowEvaluator {
     public static final double INVALID = -1;
 
     private static final double MAX_DISTANCE_FROM_100_EFFICIENCY = 1;
+    private static final double MAX_ACTUAL_VS_PREDICTED_FLUORESCENCE = .5;
 
     /**
      * @return A number between 0 and 1 representing the fitness of the current
@@ -42,14 +43,21 @@ public class LREWindowEvaluator {
     }
 
     private boolean isActualVersusPredictedFluorescenceInvalid(ProfileSummary profileSummary) {
-        return evaluateActualVersusPredictedFluorescence(profileSummary) > .5;
+        return evaluateActualVersusPredictedFluorescence(profileSummary) > MAX_ACTUAL_VS_PREDICTED_FLUORESCENCE;
     }
 
+    /**
+     * Get the average normalized (between 0 and 1) distance between the actual and
+     * predicted fluorescence values of the cycles included in the LRE window.
+     */
     private double evaluateActualVersusPredictedFluorescence(ProfileSummary profileSummary) {
         double aggregateFitnessScore = 0;
         int totalNumberOfCycles = 0;
-        Cycle cycle = profileSummary.getZeroCycle();
-        while (cycle != null) {
+
+        // note that we only care about cycles that are included in the LRE window
+        Profile profile = profileSummary.getProfile();
+        Cycle cycle = profileSummary.getLreWindowStartCycle();
+        for (int i = 0; i < profile.getLreWinSize() && cycle != null; ++i) {
             double actual = cycle.getCurrentCycleFluorescence();
             double predicted = cycle.getPredictedCyclecFluorescence();
             if (actual < 0 && predicted > 0) {

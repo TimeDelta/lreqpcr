@@ -81,6 +81,7 @@ public class ExperimentDbTree extends JPanel implements LookupListener {
 
     private final Lookup.Result nodeResult;
     private final LreAnalysisService lreAnalysisService = Lookup.getDefault().lookup(LreAnalysisService.class);
+    private final UniversalLookup universalLookup = UniversalLookup.getDefault();
     private LreNode rootLreNode;
     private ExplorerManager mgr;
     private DatabaseServices exptDB;
@@ -561,12 +562,7 @@ public class ExperimentDbTree extends JPanel implements LookupListener {
         nodesToReset.add(rootLreNode);
         Node currentNode;
         while ((currentNode = nodesToReset.poll()) != null) {
-            LreObject profile = currentNode.getLookup().lookup(LreObject.class);
-            if (profile instanceof Profile) {
-                ProfileSummary profileSummary = new ProfileSummary((Profile)profile, exptDB);
-                lreAnalysisService.lreWindowInitialization(profileSummary, selectionParameters);
-                ((LreNode)currentNode).refreshNodeLabel();
-            }
+            resetNode(currentNode);
             Node[] childNodes = currentNode.getChildren().getNodes();
             if (childNodes.length > 0) {
                 nodesToReset.addAll(Arrays.asList(childNodes));
@@ -580,12 +576,7 @@ public class ExperimentDbTree extends JPanel implements LookupListener {
         Collections.addAll(nodesToReset, selectedNodes);
         Node currentNode;
         while ((currentNode = nodesToReset.poll()) != null) {
-            LreObject profile = currentNode.getLookup().lookup(LreObject.class);
-            if (profile instanceof Profile) {
-                ProfileSummary profileSummary = new ProfileSummary((Profile) profile, exptDB);
-                lreAnalysisService.lreWindowInitialization(profileSummary, selectionParameters);
-                ((LreNode)currentNode).refreshNodeLabel();
-            }
+            resetNode(currentNode);
         }
     }//GEN-LAST:event_resetSelectedButtonActionPerformed
 
@@ -654,6 +645,42 @@ public class ExperimentDbTree extends JPanel implements LookupListener {
                     df.applyPattern(FormatingUtilities.decimalFormatPattern(ocf));
                     ocfDisplay.setText(df.format(ocf));
                 }
+            }
+        }
+    }
+
+    /**
+     * If this is a replicate sample profile, the parent AverageProfile needs to
+     * updated if it is less than 10N.
+     */
+    private void updateParentAverageProfileIfNeeded(Profile profile) {
+        //If this is SampleProfile, the parent AverageSampleProfile No needs to be updated if <10N
+        if (profile instanceof SampleProfile && !(profile instanceof AverageProfile)) {
+            AverageSampleProfile avProfile = (AverageSampleProfile) profile.getParent();
+            //This function will update the AverageSampleProfile No if it is <10N
+            if (avProfile.isTheReplicateAverageNoLessThan10Molecules()) {
+                exptDB.saveObject(avProfile);
+            } else {
+                if (avProfile.areTheRepProfilesSufficientlyClustered()) {
+                    //This updates the replicate profile average No
+                    avProfile.getReplicatePrfAvNo();
+                    exptDB.saveObject(avProfile);
+                }
+            }
+        }
+    }
+
+    private void resetNode(Node node) {
+        LreObject lreObject = node.getLookup().lookup(LreObject.class);
+        if (lreObject instanceof Profile) {
+            Profile profile = (Profile) lreObject;
+            if (!profile.isExcluded()) {
+                ProfileSummary profileSummary = new ProfileSummary(profile, exptDB);
+                lreAnalysisService.lreWindowInitialization(profileSummary, selectionParameters);
+                updateParentAverageProfileIfNeeded(profile);
+                exptDB.commitChanges();
+                universalLookup.fireChangeEvent(PanelMessages.PROFILE_CHANGED);
+                ((LreNode) node).refreshNodeLabel();
             }
         }
     }

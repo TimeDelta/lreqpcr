@@ -43,6 +43,7 @@ class ExcludeAverageSampleProfileAction extends AbstractAction {
         putValue(NAME, "Exclude Profile(s)");
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public void actionPerformed(ActionEvent e) {
         Node[] nodes = mgr.getSelectedNodes();

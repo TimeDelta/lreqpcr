@@ -52,18 +52,19 @@ import org.openide.util.Lookup;
 @SuppressWarnings("unchecked")
 public class LrePlot extends javax.swing.JPanel {
 
+    private final UniversalLookup universalLookup = UniversalLookup.getDefault();
+    private final LreAnalysisService lreAnalService = Lookup.getDefault().lookup(LreAnalysisService.class);
+    private final DecimalFormat df = new DecimalFormat();
+    private final DecimalFormat dfE = new DecimalFormat("0.00E0");
+    private final SimpleDateFormat sdf = new SimpleDateFormat("dMMMyy");
+
     private ProfileSummary prfSum; //Holds the Profile to be displayed
     private Profile profile;
     private Cycle runner;
     private Graphics2D g2;
     private double xMaxVal, yMaxVal;
-    private DecimalFormat df = new DecimalFormat();
-    private DecimalFormat dfE = new DecimalFormat("0.00E0");
     private boolean clearPlot;
-    private SimpleDateFormat sdf = new SimpleDateFormat("dMMMyy");
-    private UniversalLookup universalLookup = UniversalLookup.getDefault();
     private DatabaseServices db;//The database in which the Profile is stored
-    private LreAnalysisService lreAnalService = Lookup.getDefault().lookup(LreAnalysisService.class);
     private LreWindowSelectionParameters selectionParameters;
 
     /**
@@ -585,14 +586,12 @@ public class LrePlot extends javax.swing.JPanel {
     }//GEN-LAST:event_addBottomActionPerformed
 
 private void resetButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_resetButtonActionPerformed
-    if (profile == null) {
+    if (profile == null || profile.isExcluded()) {
         return;
     }
     //This will force a new LRE window to be selected
     //Reinitialize the Profile
     lreAnalService.lreWindowInitialization(prfSum, selectionParameters);
-    //Apply nonlinear regression
-    lreAnalService.optimizeLreWindowUsingNonlinearRegression(prfSum, selectionParameters);
     updateParentAverageProfileIfNeeded();
     db.commitChanges();
     universalLookup.fireChangeEvent(PanelMessages.PROFILE_CHANGED);
